@@ -1,0 +1,397 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==================== PACKAGES ====================
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{parskip}
+
+% ==================== COLOR SCHEME ====================
+\definecolor{ThemeBlue}{RGB}{0, 62, 116}
+\definecolor{DarkGray}{RGB}{51, 51, 51}
+\definecolor{LightGray}{RGB}{245, 245, 245}
+\definecolor{AccentOrange}{RGB}{214, 96, 77}
+
+% ==================== HYPERLINK SETUP ====================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=ThemeBlue,
+    urlcolor=ThemeBlue,
+    citecolor=ThemeBlue,
+    pdfborder={0 0 0}
+}
+
+% ==================== SECTION FORMATTING ====================
+\titleformat{\section}
+    {\Large\bfseries\color{ThemeBlue}}
+    {\thesection}{1em}{}
+    [\titlerule]
+
+\titleformat{\subsection}
+    {\large\bfseries\color{ThemeBlue}}
+    {\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+    {\normalsize\bfseries}
+    {\thesubsubsection}{1em}{}
+
+% ==================== HEADER AND FOOTER ====================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Big Data in Finance}}
+\fancyhead[R]{\small\textit{MSc Finance}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ==================== CUSTOM COMMANDS ====================
+\newcommand{\coursetitle}[1]{\textbf{\LARGE\color{ThemeBlue}#1}}
+\newcommand{\highlight}[1]{\textcolor{AccentOrange}{\textbf{#1}}}
+
+% Reading list formatting
+\newcommand{\recommended}[1]{\item[$\bullet$] #1}
+\newcommand{\advanced}[1]{\item[$\circ$] #1}
+
+% Week box - simple colored section header
+\newcommand{\weekheader}[1]{%
+    \vspace{1em}
+    \noindent{\large\bfseries\color{ThemeBlue} #1}
+    \vspace{0.3em}
+    \hrule height 0.5pt
+    \vspace{0.5em}
+}
+
+% ==================== BEGIN DOCUMENT ====================
+\begin{document}
+
+% ==================== TITLE ====================
+\begin{center}
+    \coursetitle{Big Data in Finance}\\[0.5em]
+    \normalsize Academic Year 2025--2026\\[1em]
+    
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Programme:} & MSc Finance (Elective) \\
+        \textbf{Duration:} & 7 weeks \\
+        \textbf{Format:} & 3-hour lectures + 1-hour tutorials \\
+        \textbf{Assessment:} & 10\% Participation, 25\% Group Project, 65\% Exam \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+\vspace{1em}
+
+% ==================== COURSE TEAM ====================
+\section*{Course Team}
+
+\begin{tabular}{@{}ll}
+\textbf{Module Lead:} & Dr.\ Daniele Bianchi \\
+& Email: \href{mailto:d.bianchi@qmul.ac.uk}{d.bianchi@qmul.ac.uk} \\
+& Website: \url{whitesphd.com} \\
+& Office hours: by appointment \\
+\end{tabular}
+
+% ==================== COURSE OVERVIEW ====================
+\section{Course Overview}
+
+\textbf{Core objective:} Apply state-of-the-art machine learning methods to financial decision-making.
+
+This module provides a comprehensive and rigorous introduction to machine learning methods for finance, with a systematic focus on both theoretical foundations and practical implementation. The module is structured around two main applications:
+
+\begin{itemize}[leftmargin=*]
+    \item \highlight{Market timing:} Time-series prediction of aggregate market returns (with factor investing as a related cross-sectional application)
+    \item \highlight{Credit risk assessment:} Default prediction and credit scoring
+\end{itemize}
+
+\noindent\textbf{Key features:} Theory + Practice, Python implementation, production deployment considerations, AI-assisted learning, real financial datasets.
+
+\subsection{Lecture Structure}
+
+Each \textbf{3-hour week} is divided into two parts:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{First 1.5 hours:} Theoretical foundations, methodological insights, algorithmic procedures, mathematical concepts
+    \item \textbf{Second 1.5 hours:} Financial applications, case studies, implementation details, best practices
+\end{itemize}
+
+This bipartite structure ensures students develop both conceptual understanding and practical competence with industry relevance.
+
+\subsection{Tutorial Structure}
+
+\textbf{1-hour hands-on sessions} focusing on implementation: guided coding exercises, production-ready code practices, clean/documented/version-controlled code, and model deployment considerations.
+
+\textbf{AI-Assisted Learning:} Students are \emph{encouraged} to leverage AI tools (ChatGPT, Claude, etc.) for debugging code, code optimization, interpreting model outputs, and understanding error messages. \textbf{Important:} You must understand and explain all code and implementations, regardless of source.
+
+\subsection{Learning Outcomes}
+
+By the end of this module, you will be able to:
+
+\begin{enumerate}[leftmargin=*]
+    \item Describe complex models relevant to financial decision making
+    \item Compute complex models to predict default in corporate and retail credit markets
+    \item Appraise a range of quantitative techniques to build trading strategies based on stock characteristics
+    \item Produce deployment-ready pipelines for investment and credit risk management
+\end{enumerate}
+
+\subsection{Prerequisites}
+
+\begin{itemize}[leftmargin=*]
+    \item Basic Python programming
+    \item Statistics and probability theory
+    \item Linear algebra fundamentals
+    \item Financial markets knowledge
+\end{itemize}
+
+% ==================== MODULE STRUCTURE ====================
+\section{Module Structure}
+
+\weekheader{Week 1: Foundations of Machine Learning}
+
+\textbf{Topics:} Supervised vs.\ unsupervised learning, loss functions and empirical risk minimization, bias-variance decomposition, model selection (training/validation/test sets), cross-validation for time-series, multiple testing and data snooping in finance.
+
+\textbf{Readings:}
+\begin{itemize}[nosep]
+    \recommended{James et al.\ (2023) \textit{ISL} -- Chapters 2, 5}
+    \recommended{Harvey, Liu \& Zhu (2016) ``...and the Cross-Section of Expected Returns'' \textit{RFS}}
+    \advanced{Gu, Kelly \& Xiu (2020) ``Empirical Asset Pricing via ML'' \textit{RFS} -- Intro \& Sec.\ 2}
+\end{itemize}
+
+\textbf{Tutorial 1:} Environment setup, data pipeline construction, time-series train-test splits
+
+\weekheader{Weeks 2--3: Regression Methods}
+
+\textbf{Topics:} OLS limitations in high dimensions; Ridge, Lasso, and Elastic Net regularization; tree-based methods (CART, Random Forests, Gradient Boosting); XGBoost/LightGBM; hyperparameter tuning via cross-validation.
+
+\textbf{Application:} Factor investing and market timing using macroeconomic predictors and firm characteristics.
+
+\textbf{Readings:}
+\begin{itemize}[nosep]
+    \recommended{James et al.\ (2023) \textit{ISL} -- Chapters 3, 6, 8}
+    \recommended{Goyal, Welch \& Zafirov (2024) ``A Comprehensive 2022 Look at Equity Premium Prediction'' \textit{RFS}}
+    \advanced{Kozak, Nagel \& Santosh (2020) ``Shrinking the Cross-Section'' \textit{JFE}}
+    \advanced{Breiman (2001) ``Random Forests'' \textit{Machine Learning}}
+\end{itemize}
+
+\textbf{Tutorials 2--3:} Regularized regression pipeline, Random Forest and XGBoost implementation, feature importance analysis
+
+\weekheader{Week 4: Classification Methods}
+
+\textbf{Topics:} Logistic regression; Linear and Quadratic Discriminant Analysis; classification trees and ensembles; evaluation metrics (accuracy, precision, recall, F1, ROC, AUC); class imbalance handling (SMOTE, class weights); probability calibration; threshold optimization.
+
+\textbf{Application:} Credit risk assessment using LendingClub data---default prediction, credit scoring, regulatory considerations.
+
+\textbf{Readings:}
+\begin{itemize}[nosep]
+    \recommended{James et al.\ (2023) \textit{ISL} -- Chapters 4, 8}
+    \recommended{Shumway (2001) ``Forecasting Bankruptcy More Accurately'' \textit{Journal of Business}}
+    \recommended{Khandani, Kim \& Lo (2010) ``Consumer Credit-Risk Models via ML'' \textit{JBF}}
+    \advanced{Campbell, Hilscher \& Szilagyi (2008) ``In Search of Distress Risk'' \textit{JF}}
+\end{itemize}
+
+\textbf{Tutorial 4:} Logistic regression and XGBoost for credit scoring, class imbalance handling, ROC analysis
+
+\weekheader{Weeks 5--7: Advanced Topics}
+
+\textbf{Week 5: Unsupervised Learning}
+\begin{itemize}[nosep]
+    \item Principal Component Analysis, factor extraction, Instrumented PCA
+    \item Clustering methods (K-means, hierarchical)
+    \item Applications: dimensionality reduction, portfolio construction, regime detection
+\end{itemize}
+
+\textbf{Week 6: Model Interpretability}
+\begin{itemize}[nosep]
+    \item SHAP values, LIME, partial dependence plots
+    \item Walk-forward validation and backtesting
+    \item Model monitoring and regulatory compliance (SR 11-7)
+\end{itemize}
+
+\textbf{Week 7: Neural Networks}
+\begin{itemize}[nosep]
+    \item Multi-layer perceptron architecture, activation functions
+    \item Backpropagation, regularization (dropout, early stopping)
+    \item Applications: return prediction and credit risk comparison
+\end{itemize}
+
+\textbf{Readings:}
+\begin{itemize}[nosep]
+    \recommended{James et al.\ (2023) \textit{ISL} -- Chapters 10, 12}
+    \recommended{Kelly, Pruitt \& Su (2019) ``Characteristics are Covariances'' \textit{JFE}}
+    \recommended{Lundberg \& Lee (2017) ``A Unified Approach to Interpreting Model Predictions'' \textit{NeurIPS}}
+    \advanced{Goodfellow, Bengio \& Courville (2016) \textit{Deep Learning} -- Chapters 6--7}
+\end{itemize}
+
+%\textbf{Tutorials 2--8:} PCA and clustering, SHAP analysis, MLP implementation, comprehensive model comparison
+\newpage 
+
+% ==================== ASSESSMENT ====================
+\section{Assessment}
+
+\subsection{Participation (10\%)}
+\begin{itemize}[leftmargin=*]
+    \item Active engagement in lectures and tutorials
+    \item Quality of questions and contributions
+\end{itemize}
+
+\subsection{Group Project (25\%)}
+
+\textbf{Teams of 4--5 students.} Choose one option:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Option A: ML Factor Investing Strategy}
+    \begin{itemize}
+        \item Implement 3+ ML methods for return prediction
+        \item Compare to benchmark models
+        \item Portfolio construction and backtesting
+    \end{itemize}
+    
+    \item \textbf{Option B: Credit Risk Model}
+    \begin{itemize}
+        \item Build classification pipeline with 3+ methods
+        \item Address class imbalance rigorously
+        \item Model interpretation and validation
+    \end{itemize}
+\end{itemize}
+
+\textbf{Deliverables:} Jupyter notebook, written report (5 pages max), presentation (10 min including Q\&A).
+
+\textbf{Grading:} Implementation quality (40\%), Interpretation and analysis (40\%), Deployment plan (20\%).
+
+\subsection{Final Exam (65\%)}
+
+3-hour written exam with three sections:
+
+\begin{description}[leftmargin=*]
+    \item[Section A (30 points):] Conceptual Understanding---when to use which method and why, interpreting model outputs, identifying methodological errors, deployment considerations.
+    \item[Section B (20 points):] Applied Problems---interpreting scikit-learn outputs, short coding exercises (fill-in-the-blank), debugging exercises, hyperparameter selection with justification.
+    \item[Section C (15 points):] Case Study Analysis---critical evaluation of ML study in finance, identify methodological issues and suggest improvements.
+\end{description}
+
+% ==================== TEXTBOOKS ====================
+\section{Core Textbooks}
+
+\textbf{Recommended (all available free online):}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{James, Witten, Hastie, Tibshirani \& Taylor (2023)} \textit{An Introduction to Statistical Learning with Applications in Python}\\
+    Primary textbook, accessible treatment. \url{https://www.statlearning.com/}
+    
+    \item \textbf{Hastie, Tibshirani \& Friedman (2009)} \textit{Elements of Statistical Learning}\\
+    More advanced theoretical reference. \url{https://hastie.su.domains/ElemStatLearn/}
+    
+    \item \textbf{Goodfellow, Bengio \& Courville (2016)} \textit{Deep Learning}\\
+    Neural networks reference. \url{https://www.deeplearningbook.org/}
+\end{enumerate}
+
+\textbf{Optional (purchase):}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{L\'{o}pez de Prado (2018)} \textit{Advances in Financial Machine Learning}---Practical financial ML focus.
+\end{itemize}
+
+\subsection{Reading Strategy}
+
+Each lecture has a structured reading list:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Recommended readings ($\sim$2 per lecture):} Complement lecture slides and notes; discussed in class; important background.
+    \item \textbf{Advanced readings (1--2 per lecture):} For research-interested students; technical proofs and extensions; reference for assignments.
+\end{itemize}
+
+Readings are organized thematically, not strictly by week.
+
+% ==================== SOFTWARE ====================
+\section{Software and Tools}
+
+\subsection{Required}
+\begin{itemize}[leftmargin=*]
+    \item Python 3.8+
+    \item Core libraries: numpy, pandas, scikit-learn, matplotlib, seaborn
+    \item ML libraries: XGBoost, SHAP
+    \item IDE: VS Code, Spyder, or PyCharm
+\end{itemize}
+
+\subsection{Recommended}
+\begin{itemize}[leftmargin=*]
+    \item Environment: Anaconda/Miniconda
+    \item Version control (optional): GitHub/GitLab
+\end{itemize}
+
+\subsection{Datasets}
+\begin{itemize}[leftmargin=*]
+    \item Return prediction: Goyal and Welch (provided/provided)
+    \item Credit risk: LendingClub loan data (public/provided)
+\end{itemize}
+
+% ==================== POLICIES ====================
+\section{Course Policies}
+
+\subsection{Academic Integrity}
+\begin{itemize}[leftmargin=*]
+    \item All individual work must be your own
+    \item \textbf{AI tools:} May be used for learning, but you must understand all the material. Domain expertise is key to boosting productivity via AI tools. Exam tests independent understanding.
+    \item \textbf{Group project:} Collaboration within groups only
+    \item \textbf{Proper citations} required for all sources
+    \item Plagiarism will result in course failure
+\end{itemize}
+
+\subsection{Collaboration Policy}
+\begin{itemize}[leftmargin=*]
+    \item Tutorials: Collaboration encouraged
+    \item Group project: Within groups only
+    \item Exam: Individual work only
+\end{itemize}
+
+\subsection{Late Submissions}
+\begin{itemize}[leftmargin=*]
+    \item Group projects: 10\% penalty per day late
+    \item Extensions: Only for documented emergencies---contact the Programme Office as soon as possible
+    \item All team members share responsibility for timely submission
+\end{itemize}
+
+% ==================== DISTINCTIVE FEATURES ====================
+\section{What Makes This Module Different}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Production focus:} Not just building models, but deploying them---model monitoring and drift detection, documentation and versioning, deployment considerations throughout.
+    
+    \item \textbf{Financial context:} Finance-specific challenges---time-series validation (avoid look-ahead bias), overfitting dangers in finance, regulatory requirements.
+    
+    \item \textbf{Interpretability emphasis:} Black-box models are not enough---SHAP values, LIME, partial dependence plots; explaining predictions to stakeholders.
+    
+    \item \textbf{AI-assisted learning:} Reflecting modern development practices---learn to use AI tools effectively, but maintain deep understanding.
+\end{enumerate}
+
+% ==================== ADDITIONAL RESOURCES ====================
+% \section{Additional Resources}
+
+% \subsection{Online Courses}
+% \begin{itemize}[leftmargin=*]
+%     \item Andrew Ng's Machine Learning (Coursera)
+%     \item Fast.ai Practical Deep Learning
+%     \item Kaggle Learn tutorials
+% \end{itemize}
+
+% \subsection{Practice Platforms}
+% \begin{itemize}[leftmargin=*]
+%     \item Kaggle competitions
+%     \item QuantConnect for algorithmic trading
+%     \item Google Colab for free GPU access
+% \end{itemize}
+
+% \subsection{Communities}
+% \begin{itemize}[leftmargin=*]
+%     \item Cross Validated (Stack Exchange)
+%     \item Quantitative Finance Stack Exchange
+% \end{itemize}
+
+\vfill
+\begin{center}
+\textit{Last Updated: \today}\\
+\textit{Version 2.0}
+\end{center}
+
+\end{document}

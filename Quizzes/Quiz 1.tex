@@ -1,0 +1,263 @@
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+% Page geometry
+\geometry{
+  letterpaper,
+  margin=1in
+}
+
+% Colors (course color palette)
+\definecolor{ThemeBlue}{RGB}{0, 62, 116}
+\definecolor{DarkGray}{RGB}{51, 51, 51}
+\definecolor{LightGray}{RGB}{128, 128, 128}
+
+% Hyperref setup
+\hypersetup{
+  colorlinks=true,
+  linkcolor=ThemeBlue,
+  urlcolor=ThemeBlue
+}
+
+% Section formatting
+\titleformat{\section}
+  {\Large\bfseries\color{ThemeBlue}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{ThemeBlue}}
+  {\thesubsection}{1em}{}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Big Data in Finance}
+\fancyhead[R]{\small Study Quiz: Weeks 1--3}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Custom list for questions
+\newlist{questions}{enumerate}{1}
+\setlist[questions]{label=\textbf{\arabic*.}, leftmargin=*, itemsep=12pt}
+
+% Custom list for options
+\newlist{options}{enumerate}{1}
+\setlist[options]{label=(\alph*), leftmargin=2em, itemsep=2pt, topsep=4pt}
+
+% Short answer command
+\newcommand{\shortanswer}{%
+  \vspace{0.3em}
+  \textcolor{LightGray}{\textit{Your answer:} \hrulefill}
+  \vspace{0.5em}
+}
+
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+% Title
+\begin{center}
+  {\LARGE\bfseries\color{ThemeBlue} Big Data in Finance}\\[0.5em]
+  {\Large\bfseries Study Quiz: Weeks 1--3}\\[0.3em]
+  {\large\itshape Spring 2026 \quad$\mid$\quad Dr Daniele Bianchi}
+\end{center}
+
+\vspace{1em}
+
+\noindent\textbf{Instructions:} This quiz is designed as a self-assessment tool to help you review key concepts from the first three lectures. It is not graded. Answers are provided at the end.
+
+\vspace{1.5em}
+
+%----------------------------------------------------------------------------------------
+\section*{Week 1: Foundations of Machine Learning}
+%----------------------------------------------------------------------------------------
+
+\begin{questions}
+
+\item \textbf{What is the primary goal of machine learning in finance, as opposed to traditional econometrics?}
+\begin{options}
+  \item Understanding causal relationships between variables
+  \item Maximizing out-of-sample prediction accuracy
+  \item Testing economic theories
+  \item Estimating unbiased parameters
+\end{options}
+
+\item \textbf{The bias-variance tradeoff implies that:}
+\begin{options}
+  \item Complex models always have lower prediction error
+  \item Simple models are always preferred
+  \item Reducing bias typically increases variance, and vice versa
+  \item Training error is a reliable estimate of test error
+\end{options}
+
+\item \textbf{Why is random K-fold cross-validation inappropriate for financial time series data?}
+\begin{options}
+  \item It requires too much computational power
+  \item It creates look-ahead bias by using future data to predict the past
+  \item Financial data has no temporal structure
+  \item It produces too many folds
+\end{options}
+
+\item \textbf{Which of the following is an example of survivorship bias?}
+\begin{options}
+  \item Using revised GDP data instead of first-release figures
+  \item Testing multiple strategies and only reporting the best one
+  \item Analyzing mutual fund performance using only funds that still exist today
+  \item Using current S\&P 500 constituents to backtest a 1990 strategy
+\end{options}
+
+\item \textbf{Briefly explain the difference between look-ahead bias and data snooping.}
+
+\shortanswer
+
+\end{questions}
+
+%----------------------------------------------------------------------------------------
+\section*{Week 2: Linear Regression Methods}
+%----------------------------------------------------------------------------------------
+
+\begin{questions}[resume]
+
+\item \textbf{What problem does Ridge regression address that OLS cannot handle well?}
+\begin{options}
+  \item Non-linear relationships
+  \item High variance of coefficient estimates when $p$ is large relative to $n$
+  \item Heteroskedasticity in the residuals
+  \item Serial correlation in financial returns
+\end{options}
+
+\item \textbf{The key difference between Lasso and Ridge regression is that:}
+\begin{options}
+  \item Ridge has a closed-form solution while Lasso does not
+  \item Lasso can set coefficients exactly to zero (sparse solutions)
+  \item Ridge is faster to compute
+  \item All of the above
+\end{options}
+
+\item \textbf{In the Elastic Net formulation, what do the hyperparameters $\lambda$ and $\alpha$ control?}
+\begin{options}
+  \item $\lambda$ controls the number of folds; $\alpha$ controls the learning rate
+  \item $\lambda$ controls overall penalty strength; $\alpha$ controls the mix between $L_1$ and $L_2$
+  \item $\lambda$ controls the tree depth; $\alpha$ controls the number of trees
+  \item Both control the variance of the estimator
+\end{options}
+
+\item \textbf{According to Goyal, Welch \& Zafirov (2024), why is market timing (equity premium prediction) so difficult?}
+\begin{options}
+  \item There are not enough predictors available
+  \item The signal-to-noise ratio is very low and relationships may be unstable
+  \item Linear models are always superior
+  \item Data quality has improved too much
+\end{options}
+
+\item \textbf{Write the objective function for Ridge regression. What is added to the OLS objective?}
+
+\shortanswer
+
+\end{questions}
+
+%----------------------------------------------------------------------------------------
+\newpage 
+\section*{Week 3: Tree-Based Methods}
+%----------------------------------------------------------------------------------------
+
+\begin{questions}[resume]
+
+\item \textbf{What is the main advantage of tree-based models over linear models?}
+\begin{options}
+  \item Trees are always more accurate
+  \item Trees automatically capture non-linearities and interactions
+  \item Trees require no hyperparameter tuning
+  \item Trees can extrapolate beyond the training data
+\end{options}
+
+\item \textbf{How does Random Forest reduce variance compared to a single decision tree?}
+\begin{options}
+  \item By using deeper trees
+  \item By bagging (bootstrap aggregation) and random feature subsampling
+  \item By using fewer predictors
+  \item By pruning each tree more aggressively
+\end{options}
+
+\item \textbf{What distinguishes Gradient Boosting from Random Forest?}
+\begin{options}
+  \item GB builds trees in parallel; RF builds them sequentially
+  \item GB sequentially fits trees to residuals; RF averages independent trees
+  \item GB uses deeper trees than RF
+  \item GB cannot overfit while RF can
+\end{options}
+
+\item \textbf{In the market timing application (Week 3), Random Forest achieved the best out-of-sample $R^2$, yet Ridge produced better economic performance (Sharpe ratio). Why might this happen?}
+\begin{options}
+  \item The $R^2$ metric was calculated incorrectly
+  \item RF predictions are more conservative (shrunk toward zero), leading to smaller positions
+  \item Ridge has more predictors
+  \item Random Forest is not suitable for financial data
+\end{options}
+
+\item \textbf{According to Gu, Kelly \& Xiu (2020), when does ML tend to provide the largest gains over traditional methods?}
+
+\shortanswer
+
+\end{questions}
+
+%----------------------------------------------------------------------------------------
+\newpage
+\section*{Answer Key}
+%----------------------------------------------------------------------------------------
+
+\subsection*{Week 1}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=6pt]
+  \item \textbf{(b)} -- ML focuses on prediction accuracy, while econometrics emphasizes causal inference.
+  
+  \item \textbf{(c)} -- This is the fundamental tradeoff: as model complexity increases, bias decreases but variance increases.
+  
+  \item \textbf{(b)} -- Random splits can use 2020 data to predict 2018 returns, which is unrealistic.
+  
+  \item \textbf{(c)} -- Failed funds are excluded, making average performance look better. Note: (d) is an example of look-ahead bias.
+  
+  \item Look-ahead bias uses information not available at prediction time (e.g., revised data, future index membership). Data snooping involves testing many strategies and reporting only winners, inflating apparent performance through selection bias.
+\end{enumerate}
+
+\subsection*{Week 2}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=6pt, start=6]
+  \item \textbf{(b)} -- When $p$ is large relative to $n$, OLS coefficient estimates have high variance, leading to overfitting.
+  
+  \item \textbf{(d)} -- All statements are correct. The $L_1$ penalty in Lasso creates sparse solutions.
+  
+  \item \textbf{(b)} -- $\lambda$ controls overall shrinkage; $\alpha = 1$ is pure Lasso, $\alpha = 0$ is pure Ridge.
+  
+  \item \textbf{(b)} -- Monthly return volatility $\approx 4$--5\%, predictable component $\approx 0.5\%$. Signal is buried in noise.
+  
+  \item Ridge adds an $L_2$ penalty to the OLS objective:
+  \[
+  \widehat{\beta}^{\text{Ridge}} = \arg\min_\beta \left\{ \sum_{i=1}^n (y_i - x_i'\beta)^2 + \lambda \sum_{j=1}^p \beta_j^2 \right\}
+  \]
+  This shrinks coefficients toward zero, reducing variance at the cost of introducing bias.
+\end{enumerate}
+
+\subsection*{Week 3}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=6pt, start=11]
+  \item \textbf{(b)} -- Trees automatically partition feature space, capturing non-linearities and interactions without manual specification.
+  
+  \item \textbf{(b)} -- Bagging reduces variance by averaging; feature subsampling decorrelates trees, improving the averaging effect.
+  
+  \item \textbf{(b)} -- GB builds trees sequentially, each fitting the residuals of the previous ensemble. RF builds independent trees in parallel.
+  
+  \item \textbf{(b)} -- RF averaging produces conservative predictions. Lower variance is good for $R^2$ (smaller errors) but may mean smaller trading positions and lower returns.
+  
+  \item ML provides the largest gains when: (1) signal-to-noise ratio is higher, (2) sample size is large (e.g., cross-sectional data with thousands of stocks), (3) true interactions and non-linearities exist. Market timing (low signal, small time-series sample) shows modest gains; cross-sectional stock prediction and credit risk show larger gains.
+\end{enumerate}
+
+\end{document}

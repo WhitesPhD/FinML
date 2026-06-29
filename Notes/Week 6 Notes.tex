@@ -1,0 +1,813 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{xcolor}
+
+% Page geometry
+\geometry{margin=2.5cm, headheight=14pt}
+
+% Color definitions
+\definecolor{ThemeBlue}{RGB}{0, 62, 116}
+\definecolor{DarkGray}{RGB}{51, 51, 51}
+\definecolor{AccentOrange}{RGB}{214, 96, 77}
+\definecolor{AccentGreen}{RGB}{0, 128, 0}
+
+% Hyperref settings
+\hypersetup{
+    colorlinks=true,
+    linkcolor=ThemeBlue,
+    urlcolor=ThemeBlue,
+    citecolor=ThemeBlue
+}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{ThemeBlue}{\small Big Data in Finance}}
+\fancyhead[R]{\textcolor{ThemeBlue}{\small Lecture 6 Notes}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Section formatting
+\titleformat{\section}
+  {\Large\bfseries\color{ThemeBlue}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{ThemeBlue}}
+  {\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{DarkGray}}
+  {\thesubsubsection}{1em}{}
+
+% Mathematical operators
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+
+% Custom commands
+\newcommand{\keyword}[1]{\textbf{\textcolor{AccentOrange}{#1}}}
+
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries\textcolor{ThemeBlue}{Big Data in Finance}}\\[0.5em]
+    {\Large Lecture 6: Model Interpretability}\\[1em]
+    {\large Dr Daniele Bianchi}\\[0.5em]
+    {\normalsize Spring 2026}
+\end{center}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\tableofcontents
+
+\vspace{2cm}
+
+%----------------------------------------------------------------------------------------
+\section*{Overview}
+\addcontentsline{toc}{section}{Overview}
+%----------------------------------------------------------------------------------------
+
+We have built powerful models---Random Forests with 500 trees, XGBoost with hundreds of weak learners---that outperform simple benchmarks. But can we answer these questions: \emph{Why} was this loan application denied? \emph{What} is driving the model's return forecast? \emph{How} would the prediction change if income increased? \emph{Which} features matter most for this specific case?
+
+Complex models offer \keyword{better predictions} but less \keyword{transparency}. In finance, transparency is often required---by regulators, risk managers, clients, and model developers themselves.
+
+Part I develops the theoretical toolkit for interpretability: feature importance methods (tree-based and permutation), Partial Dependence Plots (PDP), Individual Conditional Expectation (ICE) curves, SHAP values, and LIME.
+
+Part II applies these methods to predicting the equity premium using the Goyal-Welch-Zafirov (GWZ) dataset with 25 macroeconomic predictors. We use interpretability tools to understand \emph{why} the model makes its predictions and whether we can trust them.
+
+%----------------------------------------------------------------------------------------
+\section{Why Interpretability Matters}
+%----------------------------------------------------------------------------------------
+
+Consider a loan applicant denied credit by your ML model. The applicant asks: ``Why was I rejected?''
+
+\textbf{Without interpretability:} ``The model said no.'' You cannot explain the decision, creating potential legal liability, customer frustration, and regulatory non-compliance.
+
+\textbf{With interpretability:} ``Your debt-to-income ratio of 45\% was the primary factor.'' This provides clear, actionable feedback. The decision is defensible, the customer knows how to improve, and you satisfy regulatory requirements.
+
+In many jurisdictions, lenders must provide \keyword{specific reasons} for adverse credit decisions (e.g., the US Equal Credit Opportunity Act).
+
+In an investment context, when your ML model recommends a large position in a stock, the portfolio manager asks: ``Why does the model like this stock?'' This matters for:
+\begin{itemize}
+    \item \textbf{Risk management:} Is the model picking up a real signal or noise?
+    \item \textbf{Due diligence:} Can we explain this to clients and compliance?
+    \item \textbf{Model debugging:} Is the model using sensible features?
+    \item \textbf{Regime changes:} Will the signal persist in different conditions?
+\end{itemize}
+
+A particular concern: the model might heavily weight a feature that is actually a \keyword{data artifact} (e.g., ticker symbol encoded as a number). Portfolio managers are more likely to follow model recommendations they understand.
+
+\subsection{Who Needs Interpretability?}
+
+\begin{center}
+\begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{Stakeholder} & \textbf{Why They Need Interpretability} \\
+    \midrule
+    Regulators & Ensure models are fair, not discriminatory, and compliant with rules \\
+    Risk Managers & Understand model behavior in stress scenarios \\
+    Customers & Right to explanation for decisions affecting them \\
+    Model Developers & Debug models, identify data leakage, improve performance \\
+    Senior Management & Approve models they can understand and defend \\
+    Auditors & Verify model logic and governance \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+Different stakeholders need different \emph{types} and \emph{levels} of explanation.
+
+\subsection{The Accuracy-Interpretability Tradeoff}
+
+The \textbf{traditional view} holds that we must sacrifice accuracy for interpretability. Linear regression has transparent coefficients but limited predictive power; neural networks capture complex patterns but are opaque.
+
+The \textbf{modern view} offers a better solution: use \keyword{post-hoc interpretability methods} to explain complex models. We keep our high-performing Random Forest or XGBoost, then apply interpretation methods \emph{after} training.
+
+\subsection{Two Approaches to Interpretability}
+
+\textbf{1. Inherently Interpretable Models:}
+\begin{itemize}
+    \item Linear regression: Coefficients show direction and magnitude
+    \item Logistic regression: Odds ratios
+    \item Single decision tree: Visual flowchart
+    \item Limited complexity $\Rightarrow$ Limited accuracy
+\end{itemize}
+
+\textbf{2. Post-Hoc Interpretation of Complex Models:}
+\begin{itemize}
+    \item Keep your Random Forest or XGBoost
+    \item Apply interpretation methods \emph{after} training
+    \item Get the best of both worlds
+\end{itemize}
+
+This lecture focuses on post-hoc methods: feature importance, PDP/ICE, SHAP, and LIME.
+
+\subsection{Global vs.\ Local Interpretability}
+
+\textbf{Global interpretability:} ``How does the model work \emph{in general}?'' Which features matter most overall? What is the average effect of each feature? How do features interact? \emph{Methods:} Feature importance, PDP.
+
+\textbf{Local interpretability:} ``Why did the model make \emph{this specific} prediction?'' Why was this loan denied? What drove this stock's forecast? How can this applicant improve? \emph{Methods:} SHAP, LIME, ICE.
+
+Both matter. Global interpretability supports model validation and debugging. Local interpretability provides individual explanations.
+
+%----------------------------------------------------------------------------------------
+\section{Feature Importance Methods}
+%----------------------------------------------------------------------------------------
+
+Feature importance answers: which features contribute most to the model's predictions? We care because it helps us identify key drivers, detect potential data leakage (suspicious features), simplify models by removing unimportant features, and communicate what the model has learned.
+
+There are two main approaches: \keyword{model-specific} importance built into tree-based models, and \keyword{model-agnostic} permutation importance.
+
+\subsection{Tree-Based Feature Importance}
+
+For Random Forest and XGBoost, recall that regression trees split to reduce variance within nodes. A good split creates child nodes where outcomes are more similar. The improvement equals variance before split minus weighted variance after.
+
+\textbf{Feature importance idea:}
+\begin{itemize}
+    \item Each split reduces variance by some amount
+    \item Features that create \emph{bigger} variance reductions are more important
+    \item Sum reductions across all splits using that feature, across all trees
+\end{itemize}
+\[
+\text{Importance}(X_j) = \sum_{\text{splits on } X_j} (\text{Variance reduction from split})
+\]
+
+\textbf{Advantages:} Fast (computed during training), available via \texttt{model.feature\_importances\_}.
+
+\textbf{Disadvantages:} Biased toward \keyword{high-cardinality} and \keyword{correlated} features.
+
+\textbf{Issue 1 (Cardinality bias):} Features with more unique values get more chances to split. A random ID number might appear ``important.''
+
+\textbf{Issue 2 (Correlated features):} If $X_1$ and $X_2$ are correlated, the tree might use either. Importance gets ``split'' between them arbitrarily. Both appear less important than they really are. Example: FICO score and credit rating in a credit model might both show 15\% importance, but removing \emph{either} would hurt performance significantly.
+
+\subsection{Permutation Feature Importance}
+
+\textbf{Idea:} How much does performance \emph{drop} when we break the relationship between a feature and the target?
+
+\textbf{Algorithm:}
+\begin{enumerate}
+    \item Train model, compute baseline performance (e.g., $R^2$, AUC)
+    \item For each feature $X_j$:
+    \begin{enumerate}
+        \item Randomly shuffle values of $X_j$ (breaks relationship with $Y$)
+        \item Compute performance with shuffled $X_j$
+        \item Importance = Baseline $-$ Shuffled performance
+    \end{enumerate}
+    \item Repeat multiple times and average
+\end{enumerate}
+
+If shuffling $X_j$ hurts performance a lot, then $X_j$ is important.
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item \keyword{Model-agnostic:} Works for any model
+    \item Computed on \emph{held-out data} (reflects generalization)
+    \item No cardinality bias
+    \item Intuitive interpretation
+\end{itemize}
+
+\textbf{Caveats:}
+\begin{itemize}
+    \item \textbf{Correlated features:} Still problematic. Shuffling one leaves the other intact, so the model can still predict using the correlated feature. Both features appear less important.
+    \item \textbf{Computational cost:} Need to re-evaluate model many times
+    \item \textbf{Extrapolation:} Shuffling can create unrealistic combinations
+\end{itemize}
+
+\textbf{Rule of thumb:} Use permutation importance, but be cautious with correlated features.
+
+%----------------------------------------------------------------------------------------
+\section{Partial Dependence Plots}
+%----------------------------------------------------------------------------------------
+
+Feature importance tells us \emph{which} features matter. But we also want to know \emph{how} the prediction changes as a feature changes. Is the relationship linear? Monotonic? Non-monotonic? Are there threshold effects or interactions?
+
+\keyword{Partial Dependence Plots (PDP)} show the marginal effect of a feature on predictions.
+
+\subsection{The Partial Dependence Function}
+
+\textbf{Definition:}
+\[
+\text{PD}(x_j) = \frac{1}{n} \sum_{i=1}^{n} \widehat{f}(x_j, X_{-j}^{(i)})
+\]
+
+\textbf{In words:}
+\begin{enumerate}
+    \item Pick a value $x_j$ for the feature of interest
+    \item For \emph{every} observation in the data, set $X_j = x_j$ but keep other features unchanged
+    \item Compute predictions for all these modified observations
+    \item Average the predictions
+\end{enumerate}
+Repeat for a grid of values of $x_j$ and plot.
+
+\subsection{Step-by-Step Example}
+
+Suppose we have 3 observations and want PD for DTI ratio:
+
+\begin{center}
+\begin{tabular}{ccccc}
+    \textbf{Obs} & \textbf{DTI} & \textbf{Income} & \textbf{Rate} & \textbf{Original Pred} \\
+    \hline
+    1 & 20\% & \$50k & 12\% & $P(\text{def}) = 0.15$ \\
+    2 & 35\% & \$80k & 15\% & $P(\text{def}) = 0.25$ \\
+    3 & 25\% & \$45k & 10\% & $P(\text{def}) = 0.18$ \\
+\end{tabular}
+\end{center}
+
+To compute PD at DTI = 30\%, set DTI to 30\% for \emph{all} observations:
+
+\begin{center}
+\begin{tabular}{ccccc}
+    \textbf{Obs} & \textbf{DTI} & \textbf{Income} & \textbf{Rate} & \textbf{New Pred} \\
+    \hline
+    1 & \textbf{30\%} & \$50k & 12\% & $P(\text{def}) = 0.22$ \\
+    2 & \textbf{30\%} & \$80k & 15\% & $P(\text{def}) = 0.20$ \\
+    3 & \textbf{30\%} & \$45k & 10\% & $P(\text{def}) = 0.24$ \\
+\end{tabular}
+\end{center}
+
+Then $\text{PD}(\text{DTI}=30\%) = (0.22 + 0.20 + 0.24)/3 = 0.22$. Repeat for DTI = 10\%, 15\%, 20\%, ..., 50\% to build the full curve.
+
+\subsection{Interpreting PDPs}
+
+A typical PDP for DTI ratio might show:
+\begin{itemize}
+    \item Default probability increases with DTI ratio (as expected)
+    \item The relationship is \keyword{non-linear}: steep increase after DTI $>$ 25\%
+    \item This reveals a threshold effect the model has learned
+\end{itemize}
+
+\textbf{Two-way PDPs} can show interactions between two features. A heatmap might reveal that high DTI is less problematic for high-income borrowers (they can afford the debt service).
+
+\subsection{Implementation}
+
+\begin{verbatim}
+from sklearn.inspection import PartialDependenceDisplay
+
+# Single feature
+PartialDependenceDisplay.from_estimator(
+    model, X_train, features=['dti_ratio']
+)
+
+# Two features (interaction)
+PartialDependenceDisplay.from_estimator(
+    model, X_train, features=[('dti_ratio', 'income')]
+)
+\end{verbatim}
+
+Use training data to compute PDP, but interpret with caution for regions with few observations.
+
+\subsection{The Independence Assumption}
+
+PDP assumes features are \keyword{independent}. When computing PD for DTI = 50\%, we combine it with \emph{all} observed income levels, including very high incomes. But in reality, high DTI and high income rarely occur together!
+
+Result: PDP may show predictions for \keyword{unrealistic} feature combinations. Interpret cautiously when features are correlated.
+
+%----------------------------------------------------------------------------------------
+%----------------------------------------------------------------------------------------
+\section{SHAP Values}
+%----------------------------------------------------------------------------------------
+
+\textbf{SHAP = SHapley Additive exPlanations}
+
+SHAP is the gold standard for model interpretation. It provides:
+\begin{itemize}
+    \item \keyword{Local} explanation for each prediction
+    \item Additive: contributions sum to prediction
+    \item Based on game theory (Shapley values)
+    \item Theoretically grounded with desirable properties
+\end{itemize}
+
+\textbf{The key question SHAP answers:} ``For this specific prediction, how much did each feature contribute to pushing the prediction above or below the average?''
+
+\subsection{Shapley Values: Game Theory Foundation}
+
+Shapley values are a Nobel Prize-winning concept from cooperative game theory (Lloyd Shapley, 1953).
+
+\textbf{The game theory analogy:}
+\begin{itemize}
+    \item \textbf{Players} = Features
+    \item \textbf{Game} = Prediction task
+    \item \textbf{Payout} = Prediction minus average prediction
+    \item \textbf{Question:} How to fairly divide the ``payout'' among players?
+\end{itemize}
+
+\textbf{Shapley's answer:} Give each player their \keyword{average marginal contribution} across all possible coalitions (orderings).
+
+\subsection{SHAP: Intuition}
+
+Consider a loan applicant:
+\begin{itemize}
+    \item Average prediction (baseline): $P(\text{default}) = 0.20$
+    \item This applicant's prediction: $P(\text{default}) = 0.35$
+    \item Difference to explain: $0.35 - 0.20 = 0.15$
+\end{itemize}
+
+SHAP decomposes this into feature contributions:
+\[
+\underbrace{0.20}_{\text{base}} + \underbrace{0.08}_{\text{DTI}} + \underbrace{0.05}_{\text{rate}} + \underbrace{0.04}_{\text{history}} - \underbrace{0.02}_{\text{income}} = 0.35
+\]
+
+\textbf{Key property:} Contributions sum \emph{exactly} to the prediction!
+
+\subsection{Formal Definition}
+
+For feature $j$ and observation $x$:
+\[
+\phi_j(x) = \sum_{S \subseteq \{1,\ldots,p\} \setminus \{j\}} \frac{|S|!(p-|S|-1)!}{p!} \left[ f(S \cup \{j\}) - f(S) \right]
+\]
+
+In words:
+\begin{itemize}
+    \item Consider all possible subsets $S$ of features (excluding $j$)
+    \item For each subset, compute the marginal contribution of adding $j$
+    \item Weight by the number of orderings that produce this subset
+    \item Average across all subsets
+\end{itemize}
+
+SHAP values are \keyword{additive}: $f(x) = \phi_0 + \sum_{j=1}^{p} \phi_j(x)$, where $\phi_0$ is the average prediction.
+
+\subsection{Desirable Properties}
+
+SHAP is the \emph{only} method satisfying all of:
+
+\begin{enumerate}
+    \item \textbf{Local accuracy:} Contributions sum to prediction
+    \item \textbf{Missingness:} Features not in the model get $\phi_j = 0$
+    \item \textbf{Consistency:} If a feature's contribution increases in the model, its SHAP value doesn't decrease
+    \item \textbf{Symmetry:} Features that contribute equally get equal SHAP values
+\end{enumerate}
+
+These properties uniquely determine the Shapley value formula.
+
+\subsection{Computing SHAP: The Computational Challenge}
+
+\textbf{Problem:} Exact Shapley values require summing over $2^p$ subsets! With 20 features: $2^{20} \approx 1$ million subsets per prediction.
+
+\textbf{Solutions:}
+
+\begin{center}
+\begin{tabular}{lp{7cm}}
+    \toprule
+    \textbf{Method} & \textbf{Description} \\
+    \midrule
+    TreeSHAP & Exact, fast algorithm for tree-based models. $O(TLD^2)$ complexity. \\
+    KernelSHAP & Model-agnostic approximation using weighted regression. Slower but works for any model. \\
+    DeepSHAP & Approximation for neural networks using DeepLIFT. \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Practical advice:} Use TreeSHAP for Random Forest / XGBoost. Use KernelSHAP for other models.
+
+\subsection{SHAP in Python}
+
+\begin{verbatim}
+import shap
+
+# For tree-based models (fast)
+explainer = shap.TreeExplainer(xgb_model)
+shap_values = explainer.shap_values(X_test)
+
+# For any model (slower)
+explainer = shap.KernelExplainer(model.predict, X_train)
+shap_values = explainer.shap_values(X_test)
+
+# Visualizations
+shap.summary_plot(shap_values, X_test)
+shap.force_plot(explainer.expected_value, 
+    shap_values[0], X_test.iloc[0])
+\end{verbatim}
+
+\subsection{SHAP Visualizations}
+
+\textbf{Summary plot (bar):} Shows mean absolute SHAP value for each feature---global importance.
+
+\textbf{Summary plot (beeswarm):} Each dot = one observation. Color = feature value (red=high, blue=low). Shows importance AND direction of effect.
+
+\textbf{Force plot:} Explains a single prediction, showing how each feature pushes the prediction above or below the baseline.
+
+\textbf{Dependence plot:} SHAP value vs.\ feature value, showing the functional relationship and potential interactions (via color-coding).
+
+%----------------------------------------------------------------------------------------
+%----------------------------------------------------------------------------------------
+\section{Choosing the Right Method}
+%----------------------------------------------------------------------------------------
+
+\begin{center}
+\begin{tabular}{lc}
+    \toprule
+    \textbf{Question} & \textbf{Method} \\
+    \midrule
+    Which features matter overall? & Permutation importance \\
+    How does a feature affect predictions? & PDP \\
+    Why was \emph{this} prediction made? & SHAP force plot \\
+    Global importance + direction? & SHAP summary plot \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Typical workflow:}
+\begin{enumerate}
+    \item Permutation importance for feature selection
+    \item SHAP summary plot for global understanding
+    \item PDP for specific feature relationships
+    \item SHAP force plots for individual explanations
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\section{Application: Predicting the Equity Premium}
+%----------------------------------------------------------------------------------------
+
+Part II applies interpretability methods to a real forecasting problem: predicting the equity premium using macroeconomic variables.
+
+\subsection{Why Does This Matter? The Economics}
+
+Market timing is a trillion-dollar question:
+\begin{itemize}
+    \item A 1\% improvement in monthly Sharpe ratio $\approx$ billions in alpha for large funds
+    \item Pension funds, endowments, sovereign wealth funds all engage in tactical allocation
+    \item Even small predictability can justify active management fees
+\end{itemize}
+
+\textbf{Two competing views in finance:}
+\begin{enumerate}
+    \item \textbf{Efficient Markets (Fama):} Returns are unpredictable; any apparent predictability is spurious or compensation for risk
+    \item \textbf{Behavioral Finance (Shiller):} Predictability exists due to investor irrationality, sentiment, and slow-moving capital
+\end{enumerate}
+
+\textbf{Our goal:} Use interpretability to understand \emph{what economic forces} drive ML predictions---is it risk or mispricing?
+
+\subsection{Economic Theories of Return Predictability}
+
+\textbf{1. Present Value Identity (Campbell \& Shiller, 1988)}
+\[
+\underbrace{dp_t}_{\text{dividend yield}} \approx \sum_{j=1}^{\infty} \rho^{j-1} \left( \underbrace{r_{t+j}}_{\text{future returns}} - \underbrace{\Delta d_{t+j}}_{\text{dividend growth}} \right)
+\]
+High dividend yield $\Rightarrow$ either high future returns OR low future dividend growth.
+
+\textbf{2. Habit Formation (Campbell \& Cochrane, 1999)}
+\begin{itemize}
+    \item Risk aversion varies with consumption relative to habit
+    \item In recessions: high risk aversion $\Rightarrow$ high expected returns
+\end{itemize}
+
+\textbf{3. Investor Sentiment (Baker \& Wurgler, 2006)}
+\begin{itemize}
+    \item Optimism/pessimism affects asset prices
+    \item High sentiment $\Rightarrow$ overpricing $\Rightarrow$ low future returns
+\end{itemize}
+
+Different predictors capture different economic mechanisms!
+
+\subsection{The GWZ Dataset}
+
+The Goyal-Welch-Zafirov dataset contains:
+\begin{itemize}
+    \item 825 monthly observations (April 1953 -- December 2021)
+    \item Target: \texttt{MktRf} (market excess return, \%)
+    \item 25 predictor variables
+\end{itemize}
+
+\textbf{Predictor variables by economic category:}
+
+\textbf{Valuation Ratios} (Present Value Theory):
+\begin{itemize}
+    \item \texttt{d\_p}, \texttt{d\_y}: Dividend-price ratio, dividend yield
+    \item \texttt{e\_p}: Earnings-price ratio (inverse P/E)
+    \item \texttt{b\_m}: Book-to-market ratio
+    \item \textbf{Theory:} High valuation ratios $\Rightarrow$ high expected returns
+\end{itemize}
+
+\textbf{Interest Rates \& Spreads} (Macro/Credit Risk):
+\begin{itemize}
+    \item \texttt{tbl}: T-bill rate (monetary policy stance)
+    \item \texttt{tms}: Term spread (yield curve slope---recession predictor)
+    \item \texttt{dfy}, \texttt{dfr}: Default spread/return (credit risk premium)
+    \item \textbf{Theory:} Wide spreads $\Rightarrow$ high risk aversion $\Rightarrow$ high expected returns
+\end{itemize}
+
+\textbf{Technical/Sentiment} (Behavioral):
+\begin{itemize}
+    \item \texttt{svar}: Stock variance (fear/uncertainty)
+    \item \texttt{ntis}: Net equity issuance (market timing by firms)
+    \item \texttt{skvw}: Return skewness (crash risk)
+    \item \texttt{dtoy}, \texttt{avgcor}: Turnover, correlation (sentiment proxies)
+\end{itemize}
+
+\textbf{Target variable statistics:}
+\begin{center}
+\begin{tabular}{lr}
+    \toprule
+    Mean & 0.64\% \\
+    Std Dev & 4.22\% \\
+    Min & $-$22.09\% \\
+    Max & 16.19\% \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+Key observation: the \keyword{signal-to-noise ratio is low}. Monthly returns are dominated by unpredictable noise.
+
+\subsection{Model Training}
+
+\textbf{Critical:} Use chronological split, not random!
+\begin{verbatim}
+# Time-series split: first 70% for training
+split_idx = int(len(df) * 0.7)  # = 577
+X_train, X_test = X[:split_idx], X[split_idx:]
+# Training: 1953-04 to 2001-04 (n=577)
+# Testing:  2001-05 to 2021-12 (n=248)
+\end{verbatim}
+
+Random splits cause \keyword{look-ahead bias}---the model sees ``future'' data during training, inflating apparent performance.
+
+\textbf{Random Forest configuration:}
+\begin{verbatim}
+rf = RandomForestRegressor(
+    n_estimators=500,
+    max_depth=5,  # Shallow trees to avoid overfitting
+    random_state=42
+)
+\end{verbatim}
+
+\textbf{Results:}
+\begin{itemize}
+    \item In-sample $R^2$: 58\%
+    \item Out-of-sample $R^2$: 14\%
+\end{itemize}
+
+Is 14\% OOS $R^2$ good? For equity premium prediction, this is \keyword{excellent}. Goyal \& Welch (2008) found most predictors achieve \emph{negative} OOS $R^2$. Campbell \& Thompson argue that even $R^2 = 0.5\%$ is economically meaningful.
+
+\subsection{Feature Importance Results}
+
+\begin{center}
+\begin{tabular}{lcc}
+    \toprule
+    \textbf{Feature} & \textbf{Tree-Based Rank} & \textbf{Permutation Rank} \\
+    \midrule
+    dtoy & 1 & 1 \\
+    skvw & 2 & 2 \\
+    dfr & 7 & 3 \\
+    svar & 8 & 4 \\
+    ltr & 3 & 10 \\
+    avgcor & 4 & 11 \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item \texttt{dtoy} and \texttt{skvw} are top 2 in both methods---\keyword{robust finding}
+    \item \texttt{dfr} (default spread) and \texttt{svar} (volatility) rank higher in permutation---they capture crisis/stress periods (important OOS)
+    \item \texttt{ltr} and \texttt{avgcor} may be overfit in-sample
+\end{itemize}
+
+\textbf{Recommendation:} Trust permutation importance for model validation.
+
+\subsection{Economic Interpretation of Feature Importance}
+
+\textbf{Surprising result:} Traditional valuation ratios (d\_p, e\_p, b\_m) rank low!
+
+What dominates instead?
+
+\textbf{1. dtoy (Detrended Turnover):} Behavioral/sentiment indicator
+\begin{itemize}
+    \item High turnover = high trading activity = investor enthusiasm
+    \item Related to Baker \& Wurgler's sentiment measures
+\end{itemize}
+
+\textbf{2. skvw (Skewness):} Crash risk / tail risk
+\begin{itemize}
+    \item Investors dislike negative skewness (lottery preferences)
+    \item High crash risk $\Rightarrow$ investors demand higher returns
+\end{itemize}
+
+\textbf{3. dfr, svar:} Stress/volatility indicators
+\begin{itemize}
+    \item Capture time-varying risk aversion
+    \item Counter-cyclical: high in crises, low in booms
+\end{itemize}
+
+\textbf{Implication:} The model relies more on \keyword{behavioral/risk} variables than on \keyword{valuation} ratios. This suggests returns are driven by sentiment and risk premia, not just mean reversion.
+
+\subsection{Partial Dependence Results}
+
+\textbf{PDP for dtoy (Detrended Turnover):}
+\begin{itemize}
+    \item Low turnover $\rightarrow$ bearish
+    \item High turnover $\rightarrow$ very bullish
+    \item \keyword{Strongly nonlinear} effect above dtoy = 0.97
+\end{itemize}
+
+\textbf{PDP for skvw (Market Skewness):}
+\begin{itemize}
+    \item Negative skewness (crash risk) $\rightarrow$ bearish
+    \item Positive skewness $\rightarrow$ bullish
+    \item Monotonic relationship
+\end{itemize}
+
+\subsection{SHAP Analysis}
+
+For each test observation:
+\[
+\underbrace{\hat{y}_i}_{\text{prediction}} = \underbrace{0.63}_{\text{baseline}} + \underbrace{\sum_{j=1}^{25} \phi_j^{(i)}}_{\text{SHAP contributions}}
+\]
+
+\textbf{SHAP summary plot:} Mean $|\text{SHAP}|$ shows average impact. \texttt{dtoy} contributes $\pm$1.78 percentage points on average---huge given baseline is only 0.63\%!
+
+\textbf{Case Study: April 2007 (Bullish Signal)}
+\begin{itemize}
+    \item Prediction: +5.44\%
+    \item dtoy = 1.00 (maximum turnover) pushed prediction up by +3.34 percentage points
+    \item \textbf{Economic interpretation:} Sentiment-driven rally, classic late-cycle behavior
+\end{itemize}
+
+\textbf{Case Study: January 2009 (Bearish Signal)}
+\begin{itemize}
+    \item Prediction: $-$8.86\%
+    \item dtoy = 0.61 (low turnover) contributed $-$3.92 pp
+    \item skvw = $-$0.04 (negative skewness) contributed $-$2.81 pp
+    \item \textbf{Economic interpretation:} Flight to quality, deleveraging, fire sales
+\end{itemize}
+
+The model correctly identified the financial crisis through economic mechanisms!
+
+\subsection{Model Validation: Do Effects Match Theory?}
+
+\begin{center}
+\begin{tabular}{lccp{3.5cm}}
+    \toprule
+    \textbf{Feature} & \textbf{High $\rightarrow$} & \textbf{Theory} & \textbf{Mechanism} \\
+    \midrule
+    dtoy & Bullish & Behavioral & Sentiment/momentum \\
+    skvw & Bullish & Risk-based & Low crash risk \\
+    avgcor & Bullish & Behavioral & Herding/optimism \\
+    dfr & Bearish & Risk-based & Credit stress \\
+    svar & Bearish & Risk-based & Uncertainty \\
+    d\_y & Bullish & Valuation & Mean reversion \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{All effects align with theory!} This increases confidence that:
+\begin{itemize}
+    \item The model captures real economic relationships, not spurious patterns
+    \item Predictions can be trusted when economic conditions match training data
+    \item We can anticipate when the model might fail (regime changes)
+\end{itemize}
+
+Interpretability lets us \keyword{tell an economic story} about each prediction!
+
+%----------------------------------------------------------------------------------------
+\section{Portfolio Implications}
+%----------------------------------------------------------------------------------------
+
+\subsection{From Prediction to Portfolio}
+
+\textbf{Simple market timing strategy:}
+\begin{itemize}
+    \item If $\hat{r}_{t+1}^e > \bar{r}$: Overweight equities
+    \item If $\hat{r}_{t+1}^e < \bar{r}$: Underweight equities (or go to cash)
+\end{itemize}
+
+\textbf{Interpretability helps with:}
+\begin{enumerate}
+    \item \textbf{Position sizing:} Large positions only when drivers are clear
+    \item \textbf{Risk management:} Know which factors could reverse the signal
+    \item \textbf{Regime awareness:} Recognize when the model is in/out of regime
+    \item \textbf{Client communication:} Explain why you're bullish/bearish
+\end{enumerate}
+
+\textbf{Example:} ``We're overweight equities because market turnover is elevated and crash risk is low. Key risk: if credit spreads widen, our signal would flip bearish.''
+
+\subsection{When to Trust (and Distrust) the Model}
+
+\textbf{Trust the model when:}
+\begin{itemize}
+    \item SHAP decomposition tells a coherent economic story
+    \item Dominant features (dtoy, skvw) are the main drivers
+    \item Current regime resembles training data
+\end{itemize}
+
+\textbf{Be cautious when:}
+\begin{itemize}
+    \item Prediction is driven by minor/unstable features
+    \item Features are at extreme values (extrapolation)
+    \item Market structure has changed (e.g., rise of passive investing)
+    \item SHAP contributions nearly cancel out (low conviction)
+\end{itemize}
+
+\subsection{Limitations and Model Risk}
+
+\textbf{Structural breaks:} The model trained on 1953--2001 may not capture post-crisis dynamics: quantitative easing, rise of passive investing, algorithmic trading.
+
+\textbf{Crowding:} If many investors use similar predictors, predictability may diminish. GWZ variables are well-known in academic literature.
+
+\textbf{Extrapolation:} PDP shows extreme nonlinearity for dtoy $>$ 0.97. What happens at dtoy = 1.05, never seen in training? Behavior is undefined.
+
+\textbf{Omitted variables:} Fed policy, geopolitics, ESG considerations---not in the model but affect markets.
+
+Interpretability doesn't eliminate these risks but makes them \keyword{visible}, allowing informed decisions about model deployment.
+
+%----------------------------------------------------------------------------------------
+\section*{Key Concepts}
+\addcontentsline{toc}{section}{Key Concepts}
+%----------------------------------------------------------------------------------------
+
+\begin{itemize}
+    \item \keyword{Feature Importance:} Measures which variables contribute most to predictions; tree-based (fast, biased) vs.\ permutation (slower, reliable).
+    
+    \item \keyword{Partial Dependence Plot (PDP):} Shows average effect of a feature on predictions, marginalizing over other features.
+    
+    \item \keyword{ICE Curves:} Individual-level version of PDPs; reveals heterogeneity and interactions.
+    
+    \item \keyword{SHAP Values:} Game-theoretic decomposition of predictions into additive feature contributions; theoretically principled and exactly additive.
+    
+    \item \keyword{TreeSHAP:} Efficient algorithm for computing exact SHAP values for tree-based models.
+    
+    \item \keyword{LIME:} Local surrogate model approach; fits simple model in neighborhood of observation.
+    
+    \item \keyword{Global vs.\ Local Interpretability:} Global explains overall model behavior; local explains individual predictions.
+    
+    \item \keyword{Model Validation:} Using interpretability to check whether learned relationships match economic theory.
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section*{References}
+\addcontentsline{toc}{section}{References}
+%----------------------------------------------------------------------------------------
+
+\textbf{Interpretability Methods:}
+\begin{itemize}
+    \item Molnar, C.\ (2022). \textit{Interpretable Machine Learning}. Available free online. [Recomm.]
+    \item Lundberg, S.\ \& Lee, S.\ (2017). A Unified Approach to Interpreting Model Predictions. \textit{NeurIPS}. [Supp.]
+\end{itemize}
+
+\textbf{Return Predictability:}
+\begin{itemize}
+    \item Goyal, A.\ \& Welch, I.\ (2008). A Comprehensive Look at The Empirical Performance of Equity Premium Prediction. \textit{Review of Financial Studies}. [Recomm.]
+    \item Campbell, J.\ \& Thompson, S.\ (2008). Predicting Excess Stock Returns Out of Sample. \textit{Review of Financial Studies}. [Supp.]
+\end{itemize}
+
+\textbf{Economic Theory:}
+\begin{itemize}
+    \item Baker, M.\ \& Wurgler, J.\ (2006). Investor Sentiment and the Cross-Section of Stock Returns. \textit{Journal of Finance}. [Supp.]
+    \item Campbell, J.\ \& Cochrane, J.\ (1999). By Force of Habit. \textit{Journal of Political Economy}. [Supp.]
+\end{itemize}
+
+\end{document}

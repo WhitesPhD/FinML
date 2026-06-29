@@ -1,0 +1,359 @@
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+% Page geometry
+\geometry{
+  letterpaper,
+  margin=1in
+}
+
+% Colors (course color palette)
+\definecolor{ThemeBlue}{RGB}{0, 62, 116}
+\definecolor{DarkGray}{RGB}{51, 51, 51}
+\definecolor{LightGray}{RGB}{128, 128, 128}
+
+% Hyperref setup
+\hypersetup{
+  colorlinks=true,
+  linkcolor=ThemeBlue,
+  urlcolor=ThemeBlue
+}
+
+% Section formatting
+\titleformat{\section}
+  {\Large\bfseries\color{ThemeBlue}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{ThemeBlue}}
+  {\thesubsection}{1em}{}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Big Data in Finance}
+\fancyhead[R]{\small Study Quiz: Weeks 4--6}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Custom list for questions
+\newlist{questions}{enumerate}{1}
+\setlist[questions]{label=\textbf{\arabic*.}, leftmargin=*, itemsep=12pt}
+
+% Custom list for options
+\newlist{options}{enumerate}{1}
+\setlist[options]{label=(\alph*), leftmargin=2em, itemsep=2pt, topsep=4pt}
+
+% Short answer command
+\newcommand{\shortanswer}{%
+  \vspace{0.3em}
+  \textcolor{LightGray}{\textit{Your answer:} \hrulefill}
+  \vspace{0.5em}
+}
+
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+% Title
+\begin{center}
+  {\LARGE\bfseries\color{ThemeBlue} Big Data in Finance}\\[0.5em]
+  {\Large\bfseries Study Quiz: Weeks 4--6}\\[0.3em]
+  {\large\itshape Spring 2026 \quad$\mid$\quad Dr Daniele Bianchi}
+\end{center}
+
+\vspace{1em}
+
+\noindent\textbf{Instructions:} This quiz is designed as a self-assessment tool to help you review key concepts from Weeks 4--6. It is not graded. Answers are provided at the end.
+
+\vspace{1.5em}
+
+%----------------------------------------------------------------------------------------
+\section*{Week 4: Classification Methods}
+%----------------------------------------------------------------------------------------
+
+\begin{questions}
+
+\item \textbf{What is the key difference between regression and classification problems?}
+\begin{options}
+  \item Regression uses more features than classification
+  \item Classification predicts categories, while regression predicts continuous numbers
+  \item Classification requires larger datasets
+  \item Regression models are always more accurate
+\end{options}
+
+\item \textbf{Why can't we use linear regression directly for classification problems like credit default prediction?}
+\begin{options}
+  \item Linear regression is too slow
+  \item Linear regression predictions can fall outside the valid probability range $[0, 1]$
+  \item Linear regression cannot handle multiple features
+  \item Linear regression requires normally distributed errors
+\end{options}
+
+\item \textbf{In logistic regression, the sigmoid function transforms the linear combination of inputs. What is the mathematical form of the sigmoid function?}
+\begin{options}
+  \item $P(Y=1) = \beta_0 + \beta_1 x_1 + \cdots$
+  \item $P(Y=1) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 x_1 + \cdots)}}$
+  \item $P(Y=1) = e^{\beta_0 + \beta_1 x_1 + \cdots}$
+  \item $P(Y=1) = \log(\beta_0 + \beta_1 x_1 + \cdots)$
+\end{options}
+
+\item \textbf{In the confusion matrix for a credit default model, what does a False Negative (FN) represent?}
+\begin{options}
+  \item A good borrower we correctly approved
+  \item A good borrower we incorrectly denied
+  \item A defaulter we correctly identified and denied
+  \item A defaulter we incorrectly approved (missed default)
+\end{options}
+
+\item \textbf{With imbalanced data (e.g., 15\% default rate), why is accuracy a misleading metric?}
+\begin{options}
+  \item Accuracy is always unreliable
+  \item A model predicting ``no default'' for everyone achieves 85\% accuracy while being useless
+  \item Accuracy cannot be computed for binary classification
+  \item Accuracy ignores the training data
+\end{options}
+
+\item \textbf{Recall (also called sensitivity or true positive rate) is defined as:}
+\begin{options}
+  \item $\text{TP} / (\text{TP} + \text{FP})$ --- Of predicted positives, how many are correct
+  \item $\text{TP} / (\text{TP} + \text{FN})$ --- Of actual positives, how many did we catch
+  \item $\text{TN} / (\text{TN} + \text{FP})$ --- Of actual negatives, how many did we correctly identify
+  \item $(\text{TP} + \text{TN}) / n$ --- Overall correct predictions
+\end{options}
+
+\item \textbf{The ROC curve plots which two quantities against each other?}
+\begin{options}
+  \item Precision vs.\ Recall
+  \item True Positive Rate vs.\ False Positive Rate
+  \item Accuracy vs.\ Threshold
+  \item F1 Score vs.\ AUC
+\end{options}
+
+\item \textbf{In a credit risk application, if the cost of approving a defaulter is 10$\times$ higher than the cost of denying a good borrower, what should we do with the decision threshold?}
+\begin{options}
+  \item Keep the threshold at 0.5
+  \item Raise the threshold above 0.5 to approve fewer loans
+  \item Lower the threshold below 0.5 to be more cautious about defaults
+  \item Threshold choice does not depend on costs
+\end{options}
+
+\item \textbf{What does \texttt{class\_weight='balanced'} do in scikit-learn classification models?}
+
+\shortanswer
+
+\end{questions}
+
+%----------------------------------------------------------------------------------------
+\section*{Week 5: Unsupervised Learning}
+%----------------------------------------------------------------------------------------
+
+\begin{questions}[resume]
+
+\item \textbf{What is the fundamental difference between supervised and unsupervised learning?}
+\begin{options}
+  \item Supervised learning uses more data
+  \item Unsupervised learning has no target variable $Y$ to predict
+  \item Supervised learning only works with numerical data
+  \item Unsupervised learning cannot be used in finance
+\end{options}
+
+\item \textbf{In Principal Component Analysis (PCA), the first principal component (PC1) is defined as:}
+\begin{options}
+  \item The variable with the highest mean
+  \item The linear combination of original variables that has maximum variance
+  \item The most correlated variable with the target
+  \item A randomly selected direction in the data
+\end{options}
+
+\item \textbf{If the first three principal components explain 45\%, 20\%, and 10\% of the variance respectively, what is the cumulative variance explained by these three components?}
+\begin{options}
+  \item 45\%
+  \item 65\%
+  \item 75\%
+  \item 25\%
+\end{options}
+
+\item \textbf{When should you standardize your data before applying PCA?}
+\begin{options}
+  \item Always, regardless of the data
+  \item Never, as it distorts the results
+  \item When the original variables are measured on different scales
+  \item Only when using correlation-based PCA
+\end{options}
+
+\item \textbf{In K-means clustering, the algorithm minimizes:}
+\begin{options}
+  \item The number of clusters
+  \item The total within-cluster sum of squares (variance)
+  \item The distance between cluster centroids
+  \item The correlation between features
+\end{options}
+
+\item \textbf{The ``elbow method'' for choosing the number of clusters $K$ involves:}
+\begin{options}
+  \item Selecting the $K$ that maximizes within-cluster variance
+  \item Plotting within-cluster sum of squares vs.\ $K$ and looking for diminishing returns
+  \item Choosing the largest $K$ that can be computed
+  \item Using cross-validation on a target variable
+\end{options}
+
+\item \textbf{What is a key advantage of hierarchical clustering over K-means?}
+\begin{options}
+  \item Hierarchical clustering is always faster
+  \item Hierarchical clustering produces a dendrogram and doesn't require pre-specifying $K$
+  \item Hierarchical clustering handles only numerical features
+  \item Hierarchical clustering always finds the global optimum
+\end{options}
+
+\item \textbf{When applying PCA to stock returns to extract statistical factors, what does PC1 typically represent?}
+
+\shortanswer
+
+\end{questions}
+
+%----------------------------------------------------------------------------------------
+\newpage
+\section*{Week 6: Model Interpretability}
+%----------------------------------------------------------------------------------------
+
+\begin{questions}[resume]
+
+\item \textbf{Why is model interpretability particularly important in credit risk applications?}
+\begin{options}
+  \item Interpretable models are always more accurate
+  \item Regulators often require explanations for adverse credit decisions
+  \item Interpretability reduces computational costs
+  \item Black-box models cannot be deployed in finance
+\end{options}
+
+\item \textbf{What is the difference between global and local interpretability?}
+\begin{options}
+  \item Global methods are more accurate than local methods
+  \item Global methods explain overall model behavior; local methods explain individual predictions
+  \item Local methods only work for tree-based models
+  \item There is no practical difference
+\end{options}
+
+\item \textbf{Permutation feature importance measures importance by:}
+\begin{options}
+  \item Counting how often a feature appears in tree splits
+  \item Shuffling a feature's values and measuring the drop in model performance
+  \item Computing the correlation between features and the target
+  \item Removing the feature and retraining the model
+\end{options}
+
+\item \textbf{A key limitation of both tree-based and permutation feature importance when features are highly correlated is:}
+\begin{options}
+  \item The methods become computationally infeasible
+  \item Importance gets split between correlated features, understating each one's true importance
+  \item The methods cannot handle categorical features
+  \item Feature importance becomes negative
+\end{options}
+
+\item \textbf{Partial Dependence Plots (PDP) show:}
+\begin{options}
+  \item The correlation between features
+  \item The marginal effect of a feature on predictions, averaging over other features
+  \item The distribution of a single feature
+  \item The training error as a function of iterations
+\end{options}
+
+\item \textbf{SHAP values are based on which concept from game theory?}
+\begin{options}
+  \item Nash equilibrium
+  \item Shapley values --- fair allocation of a ``payout'' among players
+  \item Prisoner's dilemma
+  \item Minimax strategy
+\end{options}
+
+\item \textbf{Which property of SHAP values guarantees that the sum of all feature contributions equals the difference between the prediction and the average prediction?}
+\begin{options}
+  \item Consistency
+  \item Symmetry
+  \item Local accuracy (additivity)
+  \item Missingness
+\end{options}
+
+\item \textbf{For tree-based models like Random Forest or XGBoost, which SHAP algorithm should you use and why?}
+
+\shortanswer
+
+\end{questions}
+
+%----------------------------------------------------------------------------------------
+\newpage
+\section*{Answer Key}
+%----------------------------------------------------------------------------------------
+
+\subsection*{Week 4}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=6pt]
+  \item \textbf{(b)} -- Classification predicts discrete categories (e.g., default/no default), while regression predicts continuous values (e.g., return of $+2.3\%$).
+  
+  \item \textbf{(b)} -- Linear regression can predict values like $-0.2$ or $1.3$, which are not valid probabilities. We need models that output values in $[0, 1]$.
+  
+  \item \textbf{(b)} -- The sigmoid function $\sigma(z) = \frac{1}{1 + e^{-z}}$ ``squashes'' any real number into the interval $(0, 1)$, ensuring valid probability outputs.
+  
+  \item \textbf{(d)} -- A False Negative in credit risk is a defaulter the model failed to identify, meaning we approved someone who subsequently defaulted. This is typically the most costly error.
+  
+  \item \textbf{(b)} -- A naive model predicting the majority class for all observations achieves high accuracy but fails to identify any defaults, making it useless for the actual business problem.
+  
+  \item \textbf{(b)} -- Recall measures the fraction of actual positives (defaults) that the model correctly identifies: $\text{Recall} = \text{TP} / (\text{TP} + \text{FN})$.
+  
+  \item \textbf{(b)} -- The ROC curve plots True Positive Rate (recall) on the y-axis against False Positive Rate on the x-axis, across all possible classification thresholds.
+  
+  \item \textbf{(c)} -- When false negatives (missed defaults) are much more costly than false positives (denied good borrowers), we should lower the threshold to catch more defaults, even at the cost of denying more good borrowers.
+  
+  \item \texttt{class\_weight='balanced'} automatically adjusts weights inversely proportional to class frequencies. In a dataset with 15\% defaults, each default observation receives approximately $5.6\times$ more weight in the loss function, forcing the model to pay more attention to correctly classifying the minority class.
+\end{enumerate}
+
+\subsection*{Week 5}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=6pt, start=10]
+  \item \textbf{(b)} -- In supervised learning, we have labeled data $(X, Y)$ and train models to predict $Y$. In unsupervised learning, we only observe $X$ and seek to discover structure (dimensionality reduction, clustering) without a target variable.
+  
+  \item \textbf{(b)} -- PC1 is the linear combination $Z_1 = w_{11}X_1 + w_{12}X_2 + \cdots$ (with $\|\mathbf{w}_1\| = 1$) that maximizes variance in the projected data.
+  
+  \item \textbf{(c)} -- Cumulative variance explained is $45\% + 20\% + 10\% = 75\%$. This means three components capture 75\% of the total information in the original data.
+  
+  \item \textbf{(c)} -- Standardization is crucial when variables have different scales (e.g., income in thousands vs.\ percentages). Without standardization, variables with larger scales dominate the principal components.
+  
+  \item \textbf{(b)} -- K-means minimizes the total within-cluster sum of squares: $\sum_{k=1}^{K} \sum_{i \in C_k} \|x_i - \mu_k\|^2$, where $\mu_k$ is the centroid of cluster $k$.
+  
+  \item \textbf{(b)} -- The elbow method plots within-cluster sum of squares against $K$. We look for an ``elbow'' where adding more clusters yields diminishing improvements.
+  
+  \item \textbf{(b)} -- Hierarchical clustering builds a tree (dendrogram) showing nested cluster structure. You can cut the dendrogram at any level to get different numbers of clusters, without needing to pre-specify $K$.
+  
+  \item When applying PCA to stock returns, PC1 typically represents the \textbf{market factor} --- the common movement of all stocks together. It often explains 40--60\% of return variation and closely resembles the market portfolio. Subsequent PCs may capture size, value, or sector effects.
+\end{enumerate}
+
+\subsection*{Week 6}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=6pt, start=18]
+  \item \textbf{(b)} -- Regulations such as the US Equal Credit Opportunity Act require lenders to provide specific reasons for adverse credit decisions. Additionally, interpretability helps with model debugging, stakeholder trust, and risk management.
+  
+  \item \textbf{(b)} -- Global interpretability explains how the model works overall (e.g., which features matter most). Local interpretability explains why the model made a specific prediction for a particular observation.
+  
+  \item \textbf{(b)} -- Permutation importance randomly shuffles a feature's values (breaking its relationship with the target), then measures how much model performance drops. Larger drops indicate more important features.
+  
+  \item \textbf{(b)} -- When features are correlated, shuffling one still leaves correlated features intact, allowing the model to partially compensate. This causes importance to be ``split'' among correlated features, making each appear less important than it truly is.
+  
+  \item \textbf{(b)} -- PDPs show how the average prediction changes as one feature varies, marginalizing (averaging) over the values of all other features. This reveals the functional relationship between a feature and predictions.
+  
+  \item \textbf{(b)} -- SHAP values are based on Shapley values from cooperative game theory, which fairly distribute a ``payout'' (the prediction) among ``players'' (features) based on their marginal contributions.
+  
+  \item \textbf{(c)} -- Local accuracy (also called additivity) guarantees: $f(x) = \phi_0 + \sum_{j=1}^{p} \phi_j(x)$, where $\phi_0$ is the average prediction and each $\phi_j(x)$ is the SHAP value for feature $j$.
+  
+  \item For tree-based models, use \textbf{TreeSHAP}. It is an exact algorithm specifically designed for tree ensembles with computational complexity $O(TLD^2)$ rather than exponential. TreeSHAP exploits the tree structure to efficiently compute exact Shapley values, making it much faster than the model-agnostic KernelSHAP alternative.
+\end{enumerate}
+
+\end{document}

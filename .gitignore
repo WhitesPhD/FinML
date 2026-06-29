@@ -1,0 +1,42 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.vrb
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.run.xml
+*.bcf
+*.idx
+*.ilg
+*.ind
+
+# Compiled PDFs: ignore by default, but publish the course deliverables
+# (the companion site links to these) and the slide figures.
+*.pdf
+!Lectures/Figures/*.pdf
+!Lectures/*.pdf
+!Notes/*.pdf
+!Misc/*.pdf
+
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+*~
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files (not distributed — download from the sources in Codes/README.md)
+*.csv
+*.xlsx
+*.parquet
