@@ -4,6 +4,8 @@ Open course materials for a Master's-level module on **machine learning methods 
 
 Each week pairs theoretical foundations with practical, Python-based financial applications.
 
+**🌐 Live site:** <https://www.whitesphd.com/FinML/> &nbsp;·&nbsp; **💬 Course chat:** <https://www.whitesphd.com/FinML/chat/>
+
 ## Contents
 
 | Folder | Description |
